@@ -4,6 +4,7 @@
 
 plugins {
     id 'sec.assignment.java-application-conventions'
+    id 'org.openjfx.javafxplugin' version '0.0.7'
 }
 
 dependencies {
@@ -13,5 +14,9 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'sec.assignment.app.App'
+    mainClass = 'sec.assignment.app.view.Launcher'
+}
+
+javafx {
+    modules = [ 'javafx.controls' ]
 }

@@ -8,7 +8,5 @@
  */
 
 rootProject.name = 'sec-assignment-1'
-include('app', 'list', 'utilities')
-include 'library'
-include 'library'
+include('app')
 
