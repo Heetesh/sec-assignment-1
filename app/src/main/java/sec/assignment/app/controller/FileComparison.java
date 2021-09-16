@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileComparison {
 
-    private ExecutorService cpuPool;
+//    private ExecutorService cpuPool;
     private List<File> filesList;
     private FileCompareApp ui;
     private LCSComparison comparator;
@@ -25,12 +25,12 @@ public class FileComparison {
     public FileComparison(
             List<File> filesList,
             FileCompareApp fileCompareApp,
-            ExecutorService cpuBound,
+//            ExecutorService cpuBound,
             LCSComparison lcsComparison, FileLogger fileLogger)
     {
         this.filesList = filesList;
         this.ui = fileCompareApp;
-        this.cpuPool = cpuBound;
+//        this.cpuPool = cpuBound;
         this.comparator = lcsComparison;
         this.logger = fileLogger;
     }

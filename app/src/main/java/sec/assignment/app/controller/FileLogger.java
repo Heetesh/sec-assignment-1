@@ -14,7 +14,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
 public class FileLogger {
-    // TODO: Implement and use a blocking queue here
 
     private BlockingQueue<ComparisonResult> results  = new LinkedBlockingQueue<>(1000);
 //private BlockingQueue<ComparisonResult> results  = new SynchronousQueue<>();
@@ -42,7 +41,6 @@ public class FileLogger {
                     writer.flush();
 
                 } catch (IOException e) {
-                    // TODO: Handle appropriate error later
                     System.out.println("IO Fail: " + e.getMessage());
                 }catch (InterruptedException e2) {
                     System.out.println("Failed taking from result queue: " + e2.getMessage());

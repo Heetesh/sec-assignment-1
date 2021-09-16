@@ -42,8 +42,6 @@ public class FileCompareApp
     private FileLogger fileLogger = new FileLogger(ioPool);
 
 
-    // TODO: Create new executor service when shutdown later in appropriate place
-
     public void start(Stage stage)
     {
         stage.setTitle("File Compare-R");
@@ -100,6 +98,9 @@ public class FileCompareApp
 
     private void crossCompare(Stage stage)
     {
+
+        resultTable.getItems().clear(); // Clear the table
+
         DirectoryChooser dc = new DirectoryChooser();
         dc.setInitialDirectory(new File("."));
         dc.setTitle("Choose directory");
@@ -131,7 +132,7 @@ public class FileCompareApp
 //        Callable<List<File>> filesRead;
 
         CompletableFuture
-                // First we find all non empty files
+                // First we find all non-empty files
                 .runAsync(()-> {
                     fileFinder.findNonEmptyFiles(directory.toPath(), filesFound);
 
@@ -143,7 +144,7 @@ public class FileCompareApp
                     FileComparison comparison = new FileComparison(
                             filesFound,
                             this,
-                            cpuBound,
+//                            cpuBound,
                             new LCSComparison(),
                             fileLogger
                     );
@@ -159,7 +160,6 @@ public class FileCompareApp
 
     private void stopComparison()
     {
-        // TODO: Implement this feature
         System.out.println("Stopping comparison...");
 
         this.resultTable.getItems().clear();
