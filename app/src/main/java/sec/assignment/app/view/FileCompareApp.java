@@ -14,7 +14,9 @@ import sec.assignment.app.controller.FileLogger;
 import sec.assignment.app.model.ComparisonResult;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -28,15 +30,17 @@ public class FileCompareApp
     private TableView<ComparisonResult> resultTable = new TableView<>();
     private ProgressBar progressBar = new ProgressBar();
 
+    private final int NUM_THREADS_AVAILABLE = (Runtime.getRuntime().availableProcessors() / 2 );
+
     /** Thread pool */
-    private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()/2);
-    private Set<Files> files = new HashSet<>();
+    private ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS_AVAILABLE);
+//    private Set<Files> files = new HashSet<>();
 
 //    /** Blocking queue*/
 //    private BlockingQueue<>
 
 
-    private FileComparer fileComparer = new FileComparer(executor);
+    private FileComparer fileComparer = new FileComparer(/*executor*/);
     private FileFinder fileFinder = new FileFinder(executor);
     private FileLogger fileLogger = new FileLogger();
 
@@ -105,44 +109,7 @@ public class FileCompareApp
         File directory = dc.showDialog(stage);
 
         System.out.println("Comparing files within " + directory + "...");
-//        System.out.println(directory.toString());
-//        System.out.println(directory.getAbsoluteFile());
 
-//        executor.execute(() -> {
-//            try {
-//                Files.walkFileTree(Paths.get(directory.getAbsolutePath()), )
-//            }
-//        });
-//__________________________________________________________________________________________
-
-//        List<File> nonEmptyFiles = Collections.synchronizedList(new ArrayList<>());
-//        executor.execute(() -> {
-//            try
-//            {
-//                Files.walkFileTree(Paths.get(directory.toString()), new SimpleFileVisitor<Path>()
-//                {
-//                    @Override
-//                    public FileVisitResult visitFile(Path file, BasicFileAttributes attributes)
-//                    {
-//                        // Check whether file is not empty and add to
-//
-////                        String fileName = file.toFile().length();
-//                        File visitedFile = file.toFile();
-//                        if(visitedFile.length() != 0 ) {
-//                            nonEmptyFiles.add(visitedFile); // Add to non-empty list of files
-//                        }
-//                        return FileVisitResult.CONTINUE;
-//                    }
-//                });
-//            } catch (IOException e) {
-//                // TODO: Show error later
-//                System.out.println("Error reading file");
-//            }
-//        });
-//
-//        System.out.println(nonEmptyFiles.size());
-
-//____________________________________________________________________________________________________
         // Extremely fake way of demonstrating how to use the progress bar (noting that it can
         // actually only be set to one value, from 0-1, at a time.)
         progressBar.setProgress(0.25);
@@ -160,16 +127,85 @@ public class FileCompareApp
 
         resultTable.getItems().setAll(newResults);
 
+        resultTable.getItems().clear();
+
+        List<File> filesFound = Collections.synchronizedList(new ArrayList<>());
+
+
         CompletableFuture
                 .runAsync(()-> {
-                    System.out.println("Printed first");
+//                    executor.execute(()-> {
+                        fileFinder.findNonEmptyFiles(directory.toPath(), filesFound);
+
+                        System.out.println("Reached finding non empty files");
+//                    });
+
                 })
                 .thenRun(()-> {
-                    System.out.println("Printed second");
+//                    System.out.println(filesFound);
+                    // TODO: Do compare here
+                    //TODO: Cater for size 0 or 1
+
+                    System.out.println("Reached .thenRun");
+                    int size = filesFound.size();
+                    System.out.println("Printing size: " + size);
+
+//                    for (int ii = 0; ii < size; ii++) {
+//                        for (int j = ii+1; j < size; j++) {
+//
+//                        }
+//                    }
+
+
+                    for(int ii=0; ii<size; ii++) {
+                        for (int j=ii+1;j<size;j++) {
+
+                            int compareOne = ii;
+                            int compareTwo = j;
+                            executor.execute(()-> {
+                                File file1 = filesFound.get(compareOne);
+                                File file2 = filesFound.get(compareTwo);
+                                char[] charArrOne = null;
+                                char[] charArrTwo = null;
+                                double similarity;
+
+                                try {
+                                    String fileOneContent = Files.readString(file1.toPath(), StandardCharsets.UTF_8);
+                                    System.out.println(fileOneContent);
+                                    charArrOne = fileOneContent.toCharArray();
+
+
+                                    String fileTwoContent = Files.readString(file2.toPath(), StandardCharsets.UTF_8);
+                                    charArrTwo = fileTwoContent.toCharArray();
+
+                                    similarity = fileComparer.calSimilarity(charArrOne, charArrTwo);
+
+                                    ComparisonResult result = new ComparisonResult(
+                                            file1.toString(),
+                                            file2.toString(),
+                                            similarity
+                                    );
+
+                                    if(similarity > 0.5) {
+                                        this.setResultToScreen(result);
+                                    }
+
+                                    fileLogger.putResult(result);
+                                } catch (IOException | InterruptedException e) {
+                                    // TODO: Handle error later
+                                    e.printStackTrace();
+                                }
+//
+                            });
+                        }
+                    }
+
                 });
+
+
 //                .exceptionally();
 
-         progressBar.setProgress(0.0); // Reset progress bar after successful comparison
+//         progressBar.setProgress(0.0); // Reset progress bar after successful comparison
 
 
     } // END OF crossCompare
@@ -178,6 +214,8 @@ public class FileCompareApp
     {
         // TODO: Implement this feature
         System.out.println("Stopping comparison...");
+
+//        executor = Executors.newFixedThreadPool(NUM_THREADS_AVAILABLE);
     }
 
     /** Sets the progress bar progress
@@ -188,6 +226,8 @@ public class FileCompareApp
     }
 
     public void setResultToScreen(ComparisonResult result) {
-        this.resultTable.getItems().add(result);
+        Platform.runLater(()-> { // Platform run later because it will be accessed by other threads
+            this.resultTable.getItems().add(result);
+        });
     }
 }

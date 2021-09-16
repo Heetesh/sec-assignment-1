@@ -14,7 +14,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'sec.assignment.app.view.Launcher'
+    mainClass = 'sec.assignment.app.controller.Launcher'
 }
 
 javafx {
