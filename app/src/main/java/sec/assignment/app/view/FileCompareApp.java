@@ -1,6 +1,5 @@
 package sec.assignment.app.view;
 
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.scene.control.*;
@@ -8,41 +7,39 @@ import javafx.scene.layout.*;
 import javafx.scene.Scene;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import sec.assignment.app.controller.FileComparer;
+import sec.assignment.app.controller.FileComparison;
+import sec.assignment.app.controller.LCSComparison;
 import sec.assignment.app.controller.FileFinder;
 import sec.assignment.app.controller.FileLogger;
 import sec.assignment.app.model.ComparisonResult;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class FileCompareApp
 {
     private TableView<ComparisonResult> resultTable = new TableView<>();
     private ProgressBar progressBar = new ProgressBar();
 
-    private final int NUM_THREADS_AVAILABLE = (Runtime.getRuntime().availableProcessors() / 2 );
+    private final int NUM_THREADS_AVAILABLE = (int) (Runtime.getRuntime().availableProcessors() / 1.5);
 
     /** Thread pool */
-    private ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS_AVAILABLE);
+    private ExecutorService ioPool = Executors.newFixedThreadPool(1);
+    private ExecutorService cpuBound = Executors.newFixedThreadPool(NUM_THREADS_AVAILABLE);
+
+//    private boolean running = false;
+
+//    private int progressCounter = 0;
 //    private Set<Files> files = new HashSet<>();
 
 //    /** Blocking queue*/
 //    private BlockingQueue<>
 
 
-    private FileComparer fileComparer = new FileComparer(/*executor*/);
-    private FileFinder fileFinder = new FileFinder(executor);
-    private FileLogger fileLogger = new FileLogger();
+    private LCSComparison fileComparer = new LCSComparison(/*executor*/);
+    private FileFinder fileFinder = new FileFinder();
+    private FileLogger fileLogger = new FileLogger(ioPool);
 
 
     // TODO: Create new executor service when shutdown later in appropriate place
@@ -120,94 +117,44 @@ public class FileCompareApp
 
         // Extremely fake way of demonstrating how to update the table (noting that this shouldn't
         // just happen once at the end, but progressively as each result is obtained.)
-        List<ComparisonResult> newResults = new ArrayList<>();
-        newResults.add(new ComparisonResult("Example File 1", "Example File 2", 0.75));
-        newResults.add(new ComparisonResult("Example File 1", "Example File 3", 0.31));
-        newResults.add(new ComparisonResult("Example File 2", "Example File 3", 0.45));
+//        List<ComparisonResult> newResults = new ArrayList<>();
+//        newResults.add(new ComparisonResult("Example File 1", "Example File 2", 0.75));
+//        newResults.add(new ComparisonResult("Example File 1", "Example File 3", 0.31));
+//        newResults.add(new ComparisonResult("Example File 2", "Example File 3", 0.45));
+//
+//        resultTable.getItems().setAll(newResults);
 
-        resultTable.getItems().setAll(newResults);
-
-        resultTable.getItems().clear();
+//        resultTable.getItems().clear();
 
         List<File> filesFound = Collections.synchronizedList(new ArrayList<>());
 
+//        Callable<List<File>> filesRead;
 
         CompletableFuture
+                // First we find all non empty files
                 .runAsync(()-> {
-//                    executor.execute(()-> {
-                        fileFinder.findNonEmptyFiles(directory.toPath(), filesFound);
+                    fileFinder.findNonEmptyFiles(directory.toPath(), filesFound);
 
-                        System.out.println("Reached finding non empty files");
-//                    });
+                }, cpuBound) // Use executor pool to run this and the following chain task
 
-                })
-                .thenRun(()-> {
-//                    System.out.println(filesFound);
-                    // TODO: Do compare here
-                    //TODO: Cater for size 0 or 1
+                // Then we compare and do necessary tasks
+                .thenRunAsync(()-> {
 
-                    System.out.println("Reached .thenRun");
-                    int size = filesFound.size();
-                    System.out.println("Printing size: " + size);
+                    FileComparison comparison = new FileComparison(
+                            filesFound,
+                            this,
+                            cpuBound,
+                            new LCSComparison(),
+                            fileLogger
+                    );
 
-//                    for (int ii = 0; ii < size; ii++) {
-//                        for (int j = ii+1; j < size; j++) {
-//
-//                        }
-//                    }
+                    comparison.compareFiles();
+                },cpuBound)
+                .thenRunAsync(()-> {
+                    System.out.println("Finished all chains");
+                },cpuBound);// END OF thenRun
 
-
-                    for(int ii=0; ii<size; ii++) {
-                        for (int j=ii+1;j<size;j++) {
-
-                            int compareOne = ii;
-                            int compareTwo = j;
-                            executor.execute(()-> {
-                                File file1 = filesFound.get(compareOne);
-                                File file2 = filesFound.get(compareTwo);
-                                char[] charArrOne = null;
-                                char[] charArrTwo = null;
-                                double similarity;
-
-                                try {
-                                    String fileOneContent = Files.readString(file1.toPath(), StandardCharsets.UTF_8);
-                                    System.out.println(fileOneContent);
-                                    charArrOne = fileOneContent.toCharArray();
-
-
-                                    String fileTwoContent = Files.readString(file2.toPath(), StandardCharsets.UTF_8);
-                                    charArrTwo = fileTwoContent.toCharArray();
-
-                                    similarity = fileComparer.calSimilarity(charArrOne, charArrTwo);
-
-                                    ComparisonResult result = new ComparisonResult(
-                                            file1.toString(),
-                                            file2.toString(),
-                                            similarity
-                                    );
-
-                                    if(similarity > 0.5) {
-                                        this.setResultToScreen(result);
-                                    }
-
-                                    fileLogger.putResult(result);
-                                } catch (IOException | InterruptedException e) {
-                                    // TODO: Handle error later
-                                    e.printStackTrace();
-                                }
-//
-                            });
-                        }
-                    }
-
-                });
-
-
-//                .exceptionally();
-
-//         progressBar.setProgress(0.0); // Reset progress bar after successful comparison
-
-
+         progressBar.setProgress(0.0); // Reset progress bar after successful comparison
     } // END OF crossCompare
 
     private void stopComparison()
@@ -215,7 +162,18 @@ public class FileCompareApp
         // TODO: Implement this feature
         System.out.println("Stopping comparison...");
 
-//        executor = Executors.newFixedThreadPool(NUM_THREADS_AVAILABLE);
+        this.resultTable.getItems().clear();
+
+        ioPool.shutdown();
+        cpuBound.shutdown();
+
+//        progressCounter = 0; // Reset progress
+
+        ioPool = Executors.newFixedThreadPool(1);
+        cpuBound = Executors.newFixedThreadPool(NUM_THREADS_AVAILABLE);
+
+        progressBar.setProgress(0.0);
+
     }
 
     /** Sets the progress bar progress

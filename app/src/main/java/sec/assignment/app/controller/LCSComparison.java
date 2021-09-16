@@ -2,9 +2,9 @@ package sec.assignment.app.controller;
 
 import java.util.concurrent.ExecutorService;
 
-public class FileComparer {
+public class LCSComparison {
 //    private ExecutorService executor;
-    public FileComparer(/*ExecutorService executor*/) {
+    public LCSComparison(/*ExecutorService executor*/) {
 //        this.executor = executor; // Assign thread pool
 
     }
@@ -12,8 +12,6 @@ public class FileComparer {
     public double calSimilarity(char[] file1 , char[] file2)
     {
 
-        System.out.println("Reached calSimilarity");
-        // TODO: Use executor service to run this
         int [][]subsolution = new int[file1.length+1][file2.length+1];
         boolean [][] direction = new boolean[file1.length+1][file2.length+1];
 
@@ -61,8 +59,6 @@ public class FileComparer {
             }
         }
 
-        System.out.println("similarity = " +
-                (double) ( match*2)/ (double) (file1.length+ (double) file2.length));
 
         return (double) ( match*2)/ (double) (file1.length+ (double) file2.length);
     }
