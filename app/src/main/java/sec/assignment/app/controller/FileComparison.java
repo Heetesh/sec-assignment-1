@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Class responsible for comparing files, updating UI and writing comparison to file.
+ */
 public class FileComparison {
 
 //    private ExecutorService cpuPool;
@@ -36,6 +39,9 @@ public class FileComparison {
     }
 
 
+    /**
+     * Compares a list of files, performs UI update and file I/O
+     */
     public void compareFiles() {
         int size = filesList.size();
 
@@ -71,8 +77,8 @@ public class FileComparison {
                 } catch (IOException e ) {
                     System.out.println("IO Error: " + e.getMessage());
                 }
-                catch (InterruptedException e2 ) {
-                    System.out.println("Error adding to file: " + e2.getMessage());
+                catch (LoggerException e) {
+                    System.out.println(e.getMessage());
                 }
 
                 counter.incrementAndGet(); // completed on comparison fully
@@ -83,6 +89,12 @@ public class FileComparison {
         }
     }
 
+    /**
+     * Converts a file into a string.
+     * @param path File path
+     * @return file content as a string
+     * @throws IOException I/O error
+     */
     private String readFileToString(String path) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
         return new String(encoded, StandardCharsets.UTF_8);

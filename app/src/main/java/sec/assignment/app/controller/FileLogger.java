@@ -13,6 +13,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
+
+/**
+ * Logs files for each comparison done.
+ */
 public class FileLogger {
 
     private BlockingQueue<ComparisonResult> results  = new LinkedBlockingQueue<>(1000);
@@ -25,8 +29,7 @@ public class FileLogger {
 
         this.ioPool = pool;
 
-        // Own thread responsible for handling writing to prevent race condition.
-//        new Thread(()-> {
+        // ioPool executes
         ioPool.execute(()->{
             while (true) {
                 try {
@@ -48,15 +51,17 @@ public class FileLogger {
             }
 
         });
-//        }).start();
     }
 
 
-    public void putResult(ComparisonResult result) throws InterruptedException {
+    public void putResult(ComparisonResult result) throws LoggerException {
         try {
             this.results.put(result);
         } catch (InterruptedException e) {
-            throw new InterruptedException("Failed adding result in file logger + \nCause:" + e.getMessage() + "\n");
+//            throw new InterruptedException("Failed adding result in file logger + \nCause:" + e.getMessage() + "\n");
+            throw new LoggerException("Failed adding result in file logger + \nCause:" + e.getMessage() + "\n");
+        } catch (NullPointerException e) {
+            throw new LoggerException("Element cannot be null when putting into the queue");
         }
     }
 

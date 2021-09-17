@@ -9,3 +9,4 @@ build
 /app/src/
 
 /buildSrc/build
+*.docx#

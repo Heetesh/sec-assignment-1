@@ -22,11 +22,13 @@ public class FileCompareApp
     private TableView<ComparisonResult> resultTable = new TableView<>();
     private ProgressBar progressBar = new ProgressBar();
 
+    // Leaving some threads to the poor OS
     private final int NUM_THREADS_AVAILABLE = (int) (Runtime.getRuntime().availableProcessors() / 1.5);
 
     /** Thread pool */
-    private ExecutorService ioPool = Executors.newFixedThreadPool(1);
-    private ExecutorService cpuBound = Executors.newFixedThreadPool(NUM_THREADS_AVAILABLE);
+//    private ExecutorService ioPool = Executors.newFixedThreadPool(1);
+    private ExecutorService ioPool = Executors.newSingleThreadExecutor();
+    private ExecutorService cpuBound = findAndSetThreads();
 
 //    private boolean running = false;
 
@@ -36,8 +38,21 @@ public class FileCompareApp
 //    /** Blocking queue*/
 //    private BlockingQueue<>
 
+    public FileCompareApp(){
+        findAndSetThreads();
+    }
 
-    private LCSComparison fileComparer = new LCSComparison(/*executor*/);
+    private ExecutorService findAndSetThreads() {
+        int availThreads = (int) (Runtime.getRuntime().availableProcessors() / 1.5);
+        if (availThreads < 1) {
+            return cpuBound = Executors.newSingleThreadExecutor();
+        } else {
+            return cpuBound = Executors.newFixedThreadPool(availThreads);
+        }
+    }
+
+
+    //    private LCSComparison fileComparer = new LCSComparison(/*executor*/);
     private FileFinder fileFinder = new FileFinder();
     private FileLogger fileLogger = new FileLogger(ioPool);
 
@@ -100,6 +115,7 @@ public class FileCompareApp
     {
 
         resultTable.getItems().clear(); // Clear the table
+//        this.progressBar.setProgress(0.0);
 
         DirectoryChooser dc = new DirectoryChooser();
         dc.setInitialDirectory(new File("."));
@@ -108,24 +124,6 @@ public class FileCompareApp
 
         System.out.println("Comparing files within " + directory + "...");
 
-        // Extremely fake way of demonstrating how to use the progress bar (noting that it can
-        // actually only be set to one value, from 0-1, at a time.)
-        progressBar.setProgress(0.25);
-        progressBar.setProgress(0.5);
-        progressBar.setProgress(0.6);
-        progressBar.setProgress(0.85);
-        progressBar.setProgress(1.0);
-
-        // Extremely fake way of demonstrating how to update the table (noting that this shouldn't
-        // just happen once at the end, but progressively as each result is obtained.)
-//        List<ComparisonResult> newResults = new ArrayList<>();
-//        newResults.add(new ComparisonResult("Example File 1", "Example File 2", 0.75));
-//        newResults.add(new ComparisonResult("Example File 1", "Example File 3", 0.31));
-//        newResults.add(new ComparisonResult("Example File 2", "Example File 3", 0.45));
-//
-//        resultTable.getItems().setAll(newResults);
-
-//        resultTable.getItems().clear();
 
         List<File> filesFound = Collections.synchronizedList(new ArrayList<>());
 
@@ -170,7 +168,7 @@ public class FileCompareApp
 //        progressCounter = 0; // Reset progress
 
         ioPool = Executors.newFixedThreadPool(1);
-        cpuBound = Executors.newFixedThreadPool(NUM_THREADS_AVAILABLE);
+        cpuBound = findAndSetThreads();
 
         progressBar.setProgress(0.0);
 

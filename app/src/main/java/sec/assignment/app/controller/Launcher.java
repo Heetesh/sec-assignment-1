@@ -6,7 +6,11 @@ import sec.assignment.app.view.FileCompareApp;
 
 public class Launcher extends Application {
     public static void main(String[] args) {
-        launch(args);
+        try {
+            launch(args);
+        } catch (RuntimeException e){
+            System.out.println("Failed running the JavaFX runtime: " + e.getMessage());
+        }
     }
 
     @Override

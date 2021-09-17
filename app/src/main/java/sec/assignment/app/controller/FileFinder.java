@@ -7,11 +7,20 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+/**
+ * Responsible for finding non-empty  files in a directory specified.
+ */
 public class FileFinder {
 
     public FileFinder() {
     }
 
+    /**
+     * Finds and adds non-empty files.
+     *
+     * @param filePath the file path
+     * @param nonEmptyFiles list to add non-empty files to
+     */
     public void findNonEmptyFiles(Path filePath, List<File> nonEmptyFiles)  {
         try
         {
