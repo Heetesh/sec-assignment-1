@@ -23,12 +23,12 @@ public class FileCompareApp
     private ProgressBar progressBar = new ProgressBar();
 
     // Leaving some threads to the poor OS
-    private final int NUM_THREADS_AVAILABLE = (int) (Runtime.getRuntime().availableProcessors() / 1.5);
+//    private final int NUM_THREADS_AVAILABLE = (int) (Runtime.getRuntime().availableProcessors() / 1.5);
 
     /** Thread pool */
 //    private ExecutorService ioPool = Executors.newFixedThreadPool(1);
     private ExecutorService ioPool = Executors.newSingleThreadExecutor();
-    private ExecutorService cpuBound = findAndSetThreads();
+    private ExecutorService cpuBound;
 
 //    private boolean running = false;
 
@@ -39,15 +39,15 @@ public class FileCompareApp
 //    private BlockingQueue<>
 
     public FileCompareApp(){
-        findAndSetThreads();
+        cpuBound = findAndSetThreads();
     }
 
     private ExecutorService findAndSetThreads() {
         int availThreads = (int) (Runtime.getRuntime().availableProcessors() / 1.5);
         if (availThreads < 1) {
-            return cpuBound = Executors.newSingleThreadExecutor();
+            return Executors.newSingleThreadExecutor();
         } else {
-            return cpuBound = Executors.newFixedThreadPool(availThreads);
+            return Executors.newFixedThreadPool(availThreads);
         }
     }
 

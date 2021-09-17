@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Responsible for finding non-empty  files in a directory specified.

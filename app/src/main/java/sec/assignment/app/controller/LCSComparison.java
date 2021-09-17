@@ -1,7 +1,5 @@
 package sec.assignment.app.controller;
 
-import java.util.concurrent.ExecutorService;
-
 public class LCSComparison {
 //    private ExecutorService executor;
     public LCSComparison(/*ExecutorService executor*/) {
