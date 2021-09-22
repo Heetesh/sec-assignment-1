@@ -16,23 +16,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class FileComparison {
 
-//    private ExecutorService cpuPool;
     private List<File> filesList;
     private FileCompareApp ui;
     private LCSComparison comparator;
     private FileLogger logger;
-//    private int counter = 0; // Initialise counter as zero
     private AtomicInteger counter = new AtomicInteger(0);
 
     public FileComparison(
             List<File> filesList,
             FileCompareApp fileCompareApp,
-//            ExecutorService cpuBound,
             LCSComparison lcsComparison, FileLogger fileLogger)
     {
         this.filesList = filesList;
         this.ui = fileCompareApp;
-//        this.cpuPool = cpuBound;
         this.comparator = lcsComparison;
         this.logger = fileLogger;
     }

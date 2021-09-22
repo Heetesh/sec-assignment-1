@@ -1,11 +1,12 @@
 # Software Engineering Concepts Assignment One
 
 
-##Sub
-Student ID : 19745591
+##Student ID : 19745591
 
-To run this application,
+##To run this application, enter :
 
-asdas
+###./gradlew :app:run (Linux OS)
 
-conflict
+OR
+
+###gradlew :app:run (Windows OS)

@@ -1,21 +1,25 @@
 package sec.assignment.app.view;
 
 import javafx.application.Platform;
-import javafx.beans.property.*;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import sec.assignment.app.controller.FileComparison;
-import sec.assignment.app.controller.LCSComparison;
 import sec.assignment.app.controller.FileFinder;
 import sec.assignment.app.controller.FileLogger;
+import sec.assignment.app.controller.LCSComparison;
 import sec.assignment.app.model.ComparisonResult;
 
 import java.io.File;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class FileCompareApp
 {
@@ -142,15 +146,14 @@ public class FileCompareApp
                     FileComparison comparison = new FileComparison(
                             filesFound,
                             this,
-//                            cpuBound,
                             new LCSComparison(),
                             fileLogger
                     );
 
                     comparison.compareFiles();
-                },cpuBound)
+                },Executors.newSingleThreadExecutor())
                 .thenRunAsync(()-> {
-                    System.out.println("Finished all chains");
+                    System.out.println("Finished all chains"); // Testing purposes
                 },cpuBound);// END OF thenRun
 
          progressBar.setProgress(0.0); // Reset progress bar after successful comparison
@@ -162,8 +165,8 @@ public class FileCompareApp
 
         this.resultTable.getItems().clear();
 
-        ioPool.shutdown();
-        cpuBound.shutdown();
+        ioPool.shutdownNow();
+        cpuBound.shutdownNow();
 
 //        progressCounter = 0; // Reset progress
 

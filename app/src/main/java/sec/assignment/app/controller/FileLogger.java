@@ -2,8 +2,7 @@ package sec.assignment.app.controller;
 
 import sec.assignment.app.model.ComparisonResult;
 
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,6 +21,8 @@ public class FileLogger {
 
     public FileLogger(ExecutorService pool) {
 
+        deletePreviousFileIfExist();
+
         this.ioPool = pool;
 
         // ioPool executes
@@ -37,6 +38,7 @@ public class FileLogger {
 
                     writer.write(fileOne + "\t\t\t" + fileTwo + "\t\t\t" + similarity + "\n");
                     writer.flush();
+                    writer.close();
 
                 } catch (IOException e) {
                     System.out.println("IO Fail: " + e.getMessage());
@@ -57,6 +59,20 @@ public class FileLogger {
             throw new LoggerException("Failed adding result in file logger + \nCause:" + e.getMessage() + "\n");
         } catch (NullPointerException e) {
             throw new LoggerException("Element cannot be null when putting into the queue");
+        }
+    }
+
+    private void deletePreviousFileIfExist() {
+        File file = new File(FILE_NAME);
+        if(file.exists() && !file.isDirectory()) {
+            try {
+                PrintWriter tempWriter = new PrintWriter(file);
+                tempWriter.write(""); // write nothing and delete all previous files.
+                tempWriter.flush();
+                tempWriter.close();
+            } catch (FileNotFoundException e) {
+                System.out.println("File not found: " + e.getMessage());
+            }
         }
     }
 
